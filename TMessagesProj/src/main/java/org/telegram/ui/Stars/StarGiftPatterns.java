@@ -96,6 +96,27 @@ public class StarGiftPatterns {
         }
     };
 
+    private static final float[] profileCenter = new float[] {
+            -1.33f, -159.00f, 10.00f, .30f,
+            57.67f, -127.67f, 10.00f, .30f,
+            96.00f, -147.33f,  8.67f, .20f,
+            -96.00f, -147.33f,  8.67f, .20f,
+            133.00f,  -92.33f,  8.67f, .20f,
+            -133.00f,  -92.33f,  8.67f, .20f,
+            100.00f,  -37.33f,  9.67f, .20f,
+            -100.00f,  -37.33f,  9.67f, .20f,
+            44.00f,  -15.33f, 10.00f, .15f,
+            0.00f,  -29.33f, 10.00f, .15f,
+            -44.00f,  -14.67f, 10.00f, .15f,
+            -45.00f, -171.33f,  8.67f, .15f,
+            45.00f, -171.33f,  8.67f, .15f,
+            85.00f,  -93.33f, 10.00f, .30f,
+            59.33f,  -59.67f, 10.00f, .30f,
+            -85.00f,  -93.33f, 10.00f, .30f,
+            -57.67f, -127.67f, 10.00f, .30f,
+            -57.67f,  -59.67f, 10.00f, .30f
+    };
+
     public static void drawPattern(Canvas canvas, Drawable pattern, float w, float h, float alpha, float scale) {
         drawPattern(canvas, TYPE_DEFAULT, pattern, w, h, alpha, scale);
     }
@@ -208,5 +229,31 @@ public class StarGiftPatterns {
             pattern.draw(canvas);
         }
     }
+    public static void drawAvatarPattern(
+            Canvas canvas,
+            Drawable pattern,
+            float cx,
+            float cy,
+            float alpha,
+            float sizeScale
+    ) {
 
+        if (alpha <= 0.0f) return;
+
+        for (int i = 0; i < profileCenter.length; i += 4) {
+            float x     = profileCenter[i] * 1.1f;
+            float y     = profileCenter[i + 1] * 1.1f;
+            float size  = profileCenter[i + 2] * sizeScale;
+            float aPart = profileCenter[i + 3];
+
+            pattern.setBounds(
+                    (int) (cx + AndroidUtilities.dpf2(x) - AndroidUtilities.dpf2(size) / 2f),
+                    (int) (cy + AndroidUtilities.dpf2(y) - AndroidUtilities.dpf2(size) / 2f),
+                    (int) (cx + AndroidUtilities.dpf2(x) + AndroidUtilities.dpf2(size) / 2f),
+                    (int) (cy + AndroidUtilities.dpf2(y) + AndroidUtilities.dpf2(size) / 2f)
+            );
+            pattern.setAlpha((int) (0xFF * alpha * aPart));
+            pattern.draw(canvas);
+        }
+    }
 }

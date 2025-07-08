@@ -416,4 +416,11 @@ public class ChatNotificationsPopupWrapper {
         return options;
     }
 
+    public int getMeasuredWidth() {
+        return windowLayout.getMeasuredWidth();
+    }
+
+    public int getMeasuredHeight() {
+        return windowLayout.getMeasuredHeight();
+    }
 }

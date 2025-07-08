@@ -42,6 +42,13 @@ public class ProfileGiftsView extends View implements NotificationCenter.Notific
     private final View avatarContainer;
     private final ProfileActivity.AvatarImageView avatarImage;
     private final Theme.ResourcesProvider resourcesProvider;
+    private static final float[] PATTERN_X = { 734.5f, 858.5f, 755.5f, 323.5f, 222.5f, 338.5f };
+    private static final float[] PATTERN_Y = { 172.5f, 247.5f, 355.5f, 376.5f, 273.5f, 156.5f };
+    private static final float PATTERN_W  = 1080f;
+    private static final float PATTERN_H  = 532f;
+    private static final float PATTERN_CX = 538f + 45f;
+    private static final float PATTERN_CY = 263f + 60f;
+
 
     public ProfileGiftsView(Context context, int currentAccount, long dialogId, @NonNull View avatarContainer, ProfileActivity.AvatarImageView avatarImage, Theme.ResourcesProvider resourcesProvider) {
         super(context);
@@ -326,100 +333,44 @@ public class ProfileGiftsView extends View implements NotificationCenter.Notific
 
         final float ax = avatarContainer.getX();
         final float ay = avatarContainer.getY();
-        final float aw = (avatarContainer.getWidth()) * avatarContainer.getScaleX();
-        final float ah = (avatarContainer.getHeight()) * avatarContainer.getScaleY();
+        final float aw = avatarContainer.getWidth()  * avatarContainer.getScaleX();
+        final float ah = avatarContainer.getHeight() * avatarContainer.getScaleY();
+
+        // центр реального аватара
+        final float acx = ax + aw / 2.0f;
+        final float acy = ay + ah / 2.0f;
 
         canvas.save();
         canvas.clipRect(0, 0, getWidth(), expandY);
 
-        final float acx = ax + aw / 2.0f;
-        final float cacx = Math.min(acx, dp(48));
-        final float acy = ay + ah / 2.0f;
-        final float ar = Math.min(aw, ah) / 2.0f + dp(6);
-        final float cx = getWidth() / 2.0f;
+        final float closedAlpha = Utilities.clamp01(
+                (float) (expandY - (AndroidUtilities.statusBarHeight + ActionBar.getCurrentActionBarHeight())) / dp(50));
 
-        final float closedAlpha = Utilities.clamp01((float) (expandY - (AndroidUtilities.statusBarHeight + ActionBar.getCurrentActionBarHeight())) / dp(50));
+        // одинаковый масштаб по обеим осям
+        final float s = getWidth() / PATTERN_W;
 
-        for (int i = 0; i < gifts.size(); ++i) {
-            final Gift gift = gifts.get(i);
+        // сколько нужно сдвинуть паттерн, чтобы его «центр» совпал с аватаром
+        final float shiftX = acx - PATTERN_CX * s;
+        final float shiftY = acy - PATTERN_CY * s;
+
+        for (int i = 0; i < Math.min(gifts.size(), PATTERN_X.length); i++) {
+            final Gift  gift  = gifts.get(i);
             final float alpha = gift.animatedFloat.set(1.0f);
             final float scale = lerp(0.5f, 1.0f, alpha);
-            final int index = i; // gifts.size() == maxCount ? i - 1 : i;
-            if (index == 0) {
-                gift.draw(
-                    canvas,
-                    (float) (acx + ar * Math.cos(-65 / 180.0f * Math.PI)),
-                    (float) (acy + ar * Math.sin(-65 / 180.0f * Math.PI)),
-                    scale, -65 + 90,
-                    alpha * (1.0f - expandProgress), lerp(0.9f, 0.25f, actionBarProgress)
-                );
-            } else if (index == 1) {
-                gift.draw(
-                    canvas,
-                    lerp(cacx + Math.min(getWidth() * .27f, dp(62)), cx, 0.5f * actionBarProgress), acy - dp(52),
-                    scale, -4.0f,
-                    alpha * alpha * (1.0f - expandProgress) * (1.0f - actionBarProgress) * (closedAlpha),
-                    1.0f
-                );
-            } else if (index == 2) {
-                gift.draw(
-                    canvas,
-                    lerp(cacx + Math.min(getWidth() * .46f, dp(105)), cx, 0.5f * actionBarProgress), acy - dp(72),
-                    scale, 8.0f,
-                    alpha * (1.0f - expandProgress) * (1.0f - actionBarProgress) * (closedAlpha),
-                    1.0f
-                );
-            } else if (index == 3) {
-                gift.draw(
-                    canvas,
-                    lerp(cacx + Math.min(getWidth() * .60f, dp(136)), cx, 0.5f * actionBarProgress), acy - dp(46),
-                    scale, 3.0f,
-                    alpha * (1.0f - expandProgress) * (1.0f - actionBarProgress) * (closedAlpha),
-                    1.0f
-                );
-            } else if (index == 4) {
-                gift.draw(
-                    canvas,
-                    lerp(cacx + Math.min(getWidth() * .08f, dp(21.6f)), cx, 0.5f * actionBarProgress), acy - dp(82f),
-                    scale, -3.0f,
-                    alpha * (1.0f - expandProgress) * (1.0f - actionBarProgress) * (closedAlpha),
-                    1.0f
-                );
-            } else if (index == 5) {
-                gift.draw(
-                    canvas,
-                    lerp(cacx + Math.min(getWidth() * .745f, dp(186)), cx, 0.5f * actionBarProgress), acy - dp(39),
-                    scale, 2.0f,
-                    alpha * (1.0f - expandProgress) * (1.0f - actionBarProgress) * (closedAlpha),
-                    1.0f
-                );
-            } else if (index == 6) {
-                gift.draw(
-                    canvas,
-                    cacx + Math.min(getWidth() * .38f, dp(102)), expandY - dp(12),
-                    scale, 0,
-                    alpha * (1.0f - expandProgress) * (1.0f - actionBarProgress) * (closedAlpha),
-                    1.0f
-                );
-            } else if (index == 7) {
-                gift.draw(
-                    canvas,
-                    cacx + Math.min(getWidth() * .135f, dp(36)), expandY - dp(17.6f),
-                    scale, -5.0f,
-                    alpha * (1.0f - expandProgress) * (1.0f - actionBarProgress) * (closedAlpha),
-                    1.0f
-                );
-            } else if (index == 8) {
-                gift.draw(
-                    canvas,
-                    cacx + Math.min(getWidth() * .76f, dp(178)), expandY - dp(21.66f),
-                    scale, 5.0f,
-                    alpha * (1.0f - expandProgress) * (1.0f - actionBarProgress) * (closedAlpha),
-                    1.0f
-                );
-            }
-        }
 
+            // перевод координат из SVG → экран
+            final float px = PATTERN_X[i] * s + shiftX;
+            final float py = PATTERN_Y[i] * s + shiftY;
+
+            gift.draw(
+                    canvas,
+                    px, py,
+                    scale,             // вращать не нужно; если нужно – добавь угол
+                    0f,
+                    alpha * (1f - expandProgress) * (1f - actionBarProgress) * closedAlpha,
+                    1f
+            );
+        }
         canvas.restore();
     }
 

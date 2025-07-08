@@ -487,13 +487,29 @@ public class ProfileStoriesView extends View implements NotificationCenter.Notif
     protected void dispatchDraw(Canvas canvas) {
         float rright = rightAnimated.set(this.right);
         float avatarPullProgress = Utilities.clamp((avatarContainer.getScaleX() - 1f) / 0.4f, 1f, 0f);
-        float insetMain = AndroidUtilities.lerp(AndroidUtilities.dpf2(4f), AndroidUtilities.dpf2(3.5f), avatarPullProgress);
-        insetMain *= progressToInsets;
-        float ax = avatarContainer.getX() + insetMain * avatarContainer.getScaleX();
-        float ay = avatarContainer.getY() + insetMain * avatarContainer.getScaleY();
-        float aw = (avatarContainer.getWidth() - insetMain * 2) * avatarContainer.getScaleX();
-        float ah = (avatarContainer.getHeight() - insetMain * 2) * avatarContainer.getScaleY();
+        //float insetMain = AndroidUtilities.lerp(AndroidUtilities.dpf2(4f), AndroidUtilities.dpf2(3.5f), avatarPullProgress);
+        //insetMain *= progressToInsets;
+        float scaleX = avatarContainer.getScaleX();
+        float scaleY = avatarContainer.getScaleY();
+
+        /*--- сдвиг из-за pivot ---*/
+        float dx = (1f - scaleX) * avatarContainer.getPivotX();   //   -(scaleX-1)*pivotX
+        float dy = (1f - scaleY) * avatarContainer.getPivotY();
+
+        /*--- внутренний отступ для «прочитан / непрочитан» ---*/
+        float insetMain = AndroidUtilities.lerp(
+                AndroidUtilities.dpf2(4f),
+                AndroidUtilities.dpf2(3.5f),
+                avatarPullProgress) * progressToInsets;
+
+        /*--- итоговые координаты круга ---*/
+        float ax = avatarContainer.getX() + dx + insetMain * scaleX;
+        float ay = avatarContainer.getY() + dy + insetMain * scaleY;
+        float aw = (avatarContainer.getWidth()  - insetMain * 2f) * scaleX;
+        float ah = (avatarContainer.getHeight() - insetMain * 2f) * scaleY;
+
         rect1.set(ax, ay, ax + aw, ay + ah);
+
 
         float maxX = this.left;
         boolean needsSort = false;
