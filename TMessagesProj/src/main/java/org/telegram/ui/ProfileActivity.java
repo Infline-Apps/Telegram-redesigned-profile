@@ -1180,7 +1180,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         float topInset = actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0;
                         float avatarCx = getMeasuredWidth() / 2f;
                         float avatarCy = topInset
-                                + AndroidUtilities.dp(115)
+                                + AndroidUtilities.dp(105)
                                 + AndroidUtilities.dp(avatarSizeByDefaultFloat) * avatarScale / 2f;
 
                         float alpha = Math.min(1f, extraHeight / AndroidUtilities.dp(88));
@@ -1410,33 +1410,24 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         }
 
         public Point getButtonTopLeftOnScreen(int index) {
-            if (index < 0 || index >= buttonCount) return new Point(0, 0);
+            if (buttonCount == 0 || index < 0 || index >= buttonCount) {
+                return new Point(0, 0);
+            }
 
-            int startX        = getPaddingLeft() + horizontalPadPx;
-            int endX          = getWidth() - getPaddingRight() - horizontalPadPx;
-            float totalW      = endX - startX;
-            float totalSpaces = spacingPx * (buttonCount - 1);
-            float cellW       = (totalW - totalSpaces) / buttonCount;
+            int startX = getPaddingLeft() + horizontalPadPx;
+            int endX = getWidth() - getPaddingRight() - horizontalPadPx;
 
-            float leftInView  = startX + index * (cellW + spacingPx);
+            float totalWidth = endX - startX;
+            float totalSpace = spacingPx * (buttonCount - 1);
+            float cellWidth = (totalWidth - totalSpace) / buttonCount;
 
-            int[] loc = new int[2];
-            getLocationOnScreen(loc);
+            int localX = Math.round(startX + index * (cellWidth + spacingPx));
+            int localY = 0;
 
-            return new Point((int) (loc[0] + leftInView), loc[1]);
-        }
+            int[] viewPos = new int[2];
+            getLocationOnScreen(viewPos);
 
-        public float getCellWidth() {
-            if (buttonCount == 0) return 0;
-            int startX        = getPaddingLeft() + horizontalPadPx;
-            int endX          = getWidth() - getPaddingRight() - horizontalPadPx;
-            float totalW      = endX - startX;
-            float totalSpaces = spacingPx * (buttonCount - 1);
-            return (totalW - totalSpaces) / buttonCount;
-        }
-
-        public int getCellHeight() {
-            return cellHeightPx;
+            return new Point(viewPos[0] + localX, viewPos[1] + localY);
         }
     }
 
@@ -5463,22 +5454,18 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             onlineTextView[a].setGravity(Gravity.CENTER);
             onlineTextView[a].setAlpha(a == 0 ? 0.0f : 1.0f);
             if (a == 1 || a == 2 || a == 3) {
-                onlineTextView[a].setPadding(AndroidUtilities.dp(4), AndroidUtilities.dp(2), AndroidUtilities.dp(4), AndroidUtilities.dp(2));
+                //onlineTextView[a].setPadding(AndroidUtilities.dp(4), AndroidUtilities.dp(2), AndroidUtilities.dp(4), AndroidUtilities.dp(2));
             }
             if (a > 0) {
                 onlineTextView[a].setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
             }
             onlineTextView[a].setFocusable(a == 0);
-
-            int nameHeight = nameTextView[Math.min(a, 1)].getMeasuredHeight();
-            int top = nameHeight + AndroidUtilities.dp(4);
-
             avatarContainer2.addView(
                     onlineTextView[a],
                     LayoutHelper.createFrame(
                             LayoutHelper.WRAP_CONTENT,
                             LayoutHelper.WRAP_CONTENT,
-                            Gravity.CENTER_HORIZONTAL | Gravity.TOP,
+                            Gravity.RIGHT | Gravity.TOP,
                             0,
                             0,
                             0,
@@ -5748,45 +5735,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             AndroidUtilities.runOnUIThread(this::scrollToSharedMedia);
         }
 
-        // прячем всё, кроме аватарки
-        if (avatarContainer2 != null) {
-            // скрываем все текстовые вьюшки с именем
-            /*if (nameTextView != null) {
-                for (SimpleTextView tv : nameTextView) {
-                    if (tv != null) {
-                        tv.setVisibility(View.GONE);
-                    }
-                }
-            }*/
-            // скрываем все текстовые вьюшки со статусом/онлайном
-            /*if (onlineTextView != null) {
-                for (SimpleTextView tv : onlineTextView) {
-                    if (tv != null) {
-                        tv.setVisibility(View.GONE);
-                    }
-                }
-            }*/
-            // скрываем анимированный статус (точечка)
-            /*if (animatedStatusView != null) {
-                animatedStatusView.setVisibility(View.GONE);
-            }*/
-        }
-
-        //смайлики анимированные
-        if (giftsView != null) {
-            //giftsView.setVisibility(View.GONE);
-        }
-
-        // 2) Скрываем любые RLottieImageView в header’е (это и есть «смайлики» Premium-эффектов)
-        if (avatarContainer2 != null) {
-            for (int i = 0; i < avatarContainer2.getChildCount(); i++) {
-                View child = avatarContainer2.getChildAt(i);
-                if (child instanceof RLottieImageView) {
-                    child.setVisibility(View.GONE);
-                }
-            }
-        }
-
         if (writeButton != null) {
             writeButton.setVisibility(View.GONE);
         }
@@ -5827,13 +5775,12 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         TLRPC.User user = userId != 0 ? getMessagesController().getUser(userId) : null;
 
         boolean isTopic = topicId != 0;
-        boolean muted = getMessagesController()
-                .isDialogMuted(getDialogId(), topicId);
+        boolean muted = getMessagesController().isDialogMuted(getDialogId(), topicId);
 
-
-        Log.d("ProfileActivity", "muted: " + muted);
-        int muteIcon = muted ? R.drawable.ic_new_unmute : R.drawable.ic_new_mute;
-        String muteTitle = muted ? "Unmute" : "Mute";
+        int muteIcon  = muted ? R.drawable.ic_new_unmute : R.drawable.ic_new_mute;
+        String muteTitle = ctx.getString(muted
+                ? R.string.VoipGroupUnmute
+                : R.string.VoipGroupMute);
 
         boolean inChat = chat == null || (!chat.left && !chat.kicked);
         boolean amAdmin = chat != null && ChatObject.hasAdminRights(chat);
@@ -5843,110 +5790,131 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         boolean isMegagroup = chat != null && chat.megagroup;
         boolean isForum = chat != null && chat.forum;
 
-        boolean giftsEnabled = chat != null && chat.send_paid_messages_stars != 0;
+        boolean giftsEnabled  = chat != null && chat.send_paid_messages_stars != 0;
         boolean hasDiscussion = chat != null && chat.has_link;
 
-        /* ----------- расставляем в нужном порядке ----------- */
+        String msgTitle = LocaleController.getString(R.string.Message);
+        String leaveTitle = LocaleController.getString(R.string.VoipGroupLeave);
+        String voiceTitle = LocaleController.getString(R.string.StartVoipChatTitle);
+        String liveTitle = LocaleController.getString(R.string.StartVoipChannelTitle);
+        String callTitle = LocaleController.getString(R.string.Call);
+        String videoTitle = LocaleController.getString(R.string.VideoCall);
+        String giftTitle = LocaleController.getString(R.string.ActionStarGift);
+        String joinTitle = LocaleController.getString(R.string.ChannelJoin);
+        String shareTitle = LocaleController.getString(R.string.ShareFile);
+        String reportTitle = LocaleController.getString(R.string.Report2);
+        String discussTitle = LocaleController.getString(R.string.Discussion);
+        String addStoryTitle = LocaleController.getString(R.string.AddStory);
+        String stopTitle = LocaleController.getString(R.string.Stop);
 
-        if (isTopic) {                                   // 1) Топик
-            add.accept(R.drawable.ic_new_message, "Message");
+        if (isTopic) {
+            add.accept(R.drawable.ic_new_message, msgTitle);
             topButtonActions.add(TopButtonAction.MESSAGE);
             add.accept(muteIcon, muteTitle);
             topButtonActions.add(TopButtonAction.MUTE);
-        } else if (isForum) {                              // 2) Форум-группа
-            add.accept(R.drawable.ic_new_message, "Message");
+
+        } else if (isForum) {
+            add.accept(R.drawable.ic_new_message, msgTitle);
             topButtonActions.add(TopButtonAction.MESSAGE);
             add.accept(muteIcon, muteTitle);
             topButtonActions.add(TopButtonAction.MUTE);
-            add.accept(R.drawable.ic_new_leave, "Leave");
+            add.accept(R.drawable.ic_new_leave, leaveTitle);
             topButtonActions.add(TopButtonAction.LEAVE);
-        } else if (isMegagroup) {                          // 3) Супергруппа
-            add.accept(R.drawable.ic_new_message, "Message");
+
+        } else if (isMegagroup) {
+            add.accept(R.drawable.ic_new_message, msgTitle);
             topButtonActions.add(TopButtonAction.MESSAGE);
             add.accept(muteIcon, muteTitle);
             topButtonActions.add(TopButtonAction.MUTE);
-            add.accept(R.drawable.ic_new_leave, "Leave");
+            add.accept(R.drawable.ic_new_leave, leaveTitle);
             topButtonActions.add(TopButtonAction.LEAVE);
-        } else if (chat != null && !isChannel) {           // 4) Обычная группа
-            add.accept(R.drawable.ic_new_message, "Message");
+
+        } else if (chat != null && !isChannel) {
+            add.accept(R.drawable.ic_new_message, msgTitle);
             topButtonActions.add(TopButtonAction.MESSAGE);
             add.accept(muteIcon, muteTitle);
             topButtonActions.add(TopButtonAction.MUTE);
-            add.accept(R.drawable.ic_new_camera, "Voice Chat");
+            add.accept(R.drawable.ic_new_live_stream, voiceTitle);
             topButtonActions.add(TopButtonAction.VOICE_CHAT);
-            add.accept(R.drawable.ic_new_leave, "Leave");
+            add.accept(R.drawable.ic_new_leave, leaveTitle);
             topButtonActions.add(TopButtonAction.LEAVE);
-        } else if (user != null) {                         // 5) Пользователь / бот
-            if (user.bot) {                              // ─── БОТ ───
-                if (videoAllowed) {                      // бизнес-бот
-                    add.accept(R.drawable.ic_new_message, "Message");
-                    topButtonActions.add(TopButtonAction.MESSAGE);
-                    add.accept(muteIcon, muteTitle);
-                    topButtonActions.add(TopButtonAction.MUTE);
-                    add.accept(R.drawable.ic_new_call, "Call");
-                    topButtonActions.add(TopButtonAction.CALL);
-                    add.accept(R.drawable.ic_new_video, "Video");
-                    topButtonActions.add(TopButtonAction.VIDEO);
-                } else {                                 // обычный бот
-                    add.accept(R.drawable.ic_new_message, "Message");
-                    topButtonActions.add(TopButtonAction.MESSAGE);
-                    add.accept(muteIcon, muteTitle);
-                    topButtonActions.add(TopButtonAction.MUTE);
-                    add.accept(R.drawable.ic_new_share, "Share");
-                    topButtonActions.add(TopButtonAction.SHARE);
-                    add.accept(R.drawable.ic_new_block, "Stop");
-                    topButtonActions.add(TopButtonAction.STOP);
-                }
-            } else {                                     // ─── ЧЕЛОВЕК ───
-                add.accept(R.drawable.ic_new_message, "Message");
+
+        } else if (user != null) {
+
+            if (user.bot) {
+                add.accept(R.drawable.ic_new_message, msgTitle);
                 topButtonActions.add(TopButtonAction.MESSAGE);
                 add.accept(muteIcon, muteTitle);
                 topButtonActions.add(TopButtonAction.MUTE);
-                add.accept(R.drawable.ic_new_call, "Call");
-                topButtonActions.add(TopButtonAction.CALL);
+
                 if (videoAllowed) {
-                    add.accept(R.drawable.ic_new_video, "Video");
+                    add.accept(R.drawable.ic_new_call,  callTitle);
+                    topButtonActions.add(TopButtonAction.CALL);
+                    add.accept(R.drawable.ic_new_video, videoTitle);
                     topButtonActions.add(TopButtonAction.VIDEO);
                 } else {
-                    add.accept(R.drawable.ic_new_gift, "Gift");
+                    add.accept(R.drawable.ic_new_share, shareTitle);
+                    topButtonActions.add(TopButtonAction.SHARE);
+                    add.accept(R.drawable.ic_new_block, stopTitle);
+                    topButtonActions.add(TopButtonAction.STOP);
+                }
+
+            } else {
+                add.accept(R.drawable.ic_new_message, msgTitle);
+                topButtonActions.add(TopButtonAction.MESSAGE);
+                add.accept(muteIcon, muteTitle);
+                topButtonActions.add(TopButtonAction.MUTE);
+                add.accept(R.drawable.ic_new_call, callTitle);
+                topButtonActions.add(TopButtonAction.CALL);
+
+                if (videoAllowed) {
+                    add.accept(R.drawable.ic_new_video, videoTitle);
+                    topButtonActions.add(TopButtonAction.VIDEO);
+                } else {
+                    add.accept(R.drawable.ic_new_gift, giftTitle);
                     topButtonActions.add(TopButtonAction.GIFT);
                 }
             }
-        } else if (isChannel && !inChat) {                 // 6) Канал – ещё не подписан
-            add.accept(R.drawable.ic_new_join, "Join");
+
+        } else if (isChannel && !inChat) {
+            add.accept(R.drawable.ic_new_join, joinTitle);
             topButtonActions.add(TopButtonAction.JOIN);
             add.accept(muteIcon, muteTitle);
             topButtonActions.add(TopButtonAction.MUTE);
-            add.accept(R.drawable.ic_new_share, "Share");
+            add.accept(R.drawable.ic_new_share, shareTitle);
             topButtonActions.add(TopButtonAction.SHARE);
-            add.accept(R.drawable.ic_new_report, "Report");
+            add.accept(R.drawable.ic_new_report, reportTitle);
             topButtonActions.add(TopButtonAction.REPORT);
-        } else if (isChannel && amAdmin) {                 // 7) Канал – админ
-            add.accept(R.drawable.ic_new_live_stream, "Live Stream");
+
+        } else if (isChannel && amAdmin) {
+            add.accept(R.drawable.ic_new_live_stream, liveTitle);
             topButtonActions.add(TopButtonAction.LIVE_STREAM);
             add.accept(muteIcon, muteTitle);
             topButtonActions.add(TopButtonAction.MUTE);
-            add.accept(R.drawable.ic_new_story, "Add Story");
+            add.accept(R.drawable.ic_new_story, addStoryTitle);
             topButtonActions.add(TopButtonAction.ADD_STORY);
-        } else if (isChannel && inChat) {                  // 8) Канал – подписчик
+
+        } else if (isChannel && inChat) {
             add.accept(muteIcon, muteTitle);
             topButtonActions.add(TopButtonAction.MUTE);
+
             if (giftsEnabled) {
-                add.accept(R.drawable.ic_new_gift, "Gift");
+                add.accept(R.drawable.ic_new_gift, giftTitle);
                 topButtonActions.add(TopButtonAction.GIFT);
             }
             if (hasDiscussion) {
-                add.accept(R.drawable.ic_new_message, "Discuss");
+                add.accept(R.drawable.ic_new_message, discussTitle);
                 topButtonActions.add(TopButtonAction.DISCUSS);
             }
-            add.accept(R.drawable.ic_new_share, "Share");
+            add.accept(R.drawable.ic_new_share, shareTitle);
             topButtonActions.add(TopButtonAction.SHARE);
-            add.accept(R.drawable.ic_new_leave, "Leave");
+            add.accept(R.drawable.ic_new_leave, leaveTitle);
             topButtonActions.add(TopButtonAction.LEAVE);
         }
 
         topViewButtons.setButtons(icons, titles);
     }
+
 
     private int lastTopButtonIndex = -1;
 
@@ -5963,7 +5931,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 openDiscussion();
                 break;
             case MUTE:
-                toggleMute();
+                toggleMute(index);
                 break;
             case SHARE:
                 shareProfile();
@@ -6016,17 +5984,17 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         presentFragment(new ChatActivity(args));
     }
 
-    private void showNotificationsPopup(View anchor) {
-        final long did      = getDialogId();
-        final long tid      = topicId;                 // (0 для обычного чата)
-        final int  account  = getCurrentAccount();
+    private void showNotificationsPopup(View anchor, int index) {
+        final long did = getDialogId();
+        final long tid = topicId;
+        final int account = getCurrentAccount();
 
         ChatNotificationsPopupWrapper popup = new ChatNotificationsPopupWrapper(
-                getParentActivity(),                  // Context
-                account,                              // currentAccount
-                null,                                 // Swipe-back layout
-                true,                                 // isProfile
-                true,                                 // drawBackground
+                getParentActivity(),
+                account,
+                null,
+                true,
+                true,
                 new ChatNotificationsPopupWrapper.Callback() {
 
                     @Override
@@ -6057,7 +6025,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     }
 
                     @Override
-                    public void toggleMute() {         // «Mute forever / Unmute»
+                    public void toggleMute() {
                         boolean muted = MessagesController.getInstance(account).isDialogMuted(did, tid);
                         NotificationsController.getInstance(account).muteDialog(did, tid, !muted);
                         BulletinFactory.createMuteBulletin(ProfileActivity.this, !muted, null).show();
@@ -6066,17 +6034,16 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     }
 
                     @Override
-                    public void showCustomize() {      // «Customize»
+                    public void showCustomize() {
                         Bundle args = new Bundle();
                         args.putLong("dialog_id", did);
                         args.putLong("topic_id",  tid);
                         presentFragment(new ProfileNotificationsActivity(args, getResourceProvider()));
                     }
                 },
-                resourcesProvider                      // 7-й аргумент!
+                resourcesProvider
         );
 
-        // ─── убираем дубли «Mute for 1 hour», если оба ключа совпадают ───
         SharedPreferences sp = MessagesController.getNotificationsSettings(account);
         int t1 = sp.getInt(ChatNotificationsPopupWrapper.LAST_SELECTED_TIME_KEY_1, 0);
         int t2 = sp.getInt(ChatNotificationsPopupWrapper.LAST_SELECTED_TIME_KEY_2, 0);
@@ -6086,40 +6053,34 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
         popup.update(did, tid, null);
 
-        // ─── Если якорем служат именно TopViewButtons и известен индекс ───
-        if (anchor instanceof TopViewButtons && lastTopButtonIndex >= 0) {
-            TopViewButtons tvb = (TopViewButtons) anchor;
+        popup.windowLayout.measure(
+                View.MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(1000), View.MeasureSpec.AT_MOST),
+                View.MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(1000), View.MeasureSpec.AT_MOST));
+        int popupW = popup.windowLayout.getMeasuredWidth();
+        int popupH = popup.windowLayout.getMeasuredHeight();
 
-            // 1. Абсолютный «левый-верх» кнопки
-            Point button = tvb.getButtonTopLeftOnScreen(lastTopButtonIndex);
+        Point btnOnScreen = topViewButtons.getButtonTopLeftOnScreen(index);
 
-            // 2. Уже измеренные габариты самого поп-апа
-            int pw = popup.getMeasuredWidth();
-            int ph = popup.getMeasuredHeight();
+        int[] anchorLoc = new int[2];
+        topViewButtons.getLocationOnScreen(anchorLoc);
 
-            // 3. Координаты центра = левый-верх + половина ширины/высоты поп-апа
-            float centerX = button.x + pw / 2f;
-            float centerY = button.y + ph / 2f;
+        int relX = btnOnScreen.x - anchorLoc[0];
+        int relY = btnOnScreen.y - anchorLoc[1];
 
-            // 4. Корневой view фрагмента нужен только как window-token
-            View root = fragmentView != null ? fragmentView : tvb.getRootView();
+        float offsetX = relX + popupW / 2f - AndroidUtilities.dp(12);
+        float offsetY = relY + popupH / 2f - AndroidUtilities.dp(14);
 
-            // 5. Показываем ровно в левом-верхнем углу кнопки
-            popup.showAsOptions(ProfileActivity.this, root, centerX, centerY);
-        } else {
-            // старое поведение
-            popup.showAsOptions(ProfileActivity.this, anchor, 0, 0);
-        }
+        popup.showAsOptions(ProfileActivity.this, topViewButtons, offsetX, offsetY);
     }
 
-    private void toggleMute() {
+    private void toggleMute(int index) {
         if (topViewButtons != null) {
-            showNotificationsPopup(topViewButtons);
+            showNotificationsPopup(topViewButtons, index);
         } else {
             View fallback = fragmentView != null
                     ? fragmentView
                     : getParentActivity().getWindow().getDecorView();
-            showNotificationsPopup(fallback);
+            showNotificationsPopup(fallback, index);
         }
     }
 
@@ -6148,15 +6109,15 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         };
 
         AlertsCreator.showBlockReportSpamAlert(
-                this,                  // fragment
-                getDialogId(),         // dialog id
-                bot,                   // currentUser (бот)
-                null,                  // currentChat
-                null,                  // encryptedChat
-                false,                 // isLocationChat
-                null,                  // chatInfo
-                dummyCallback,         // callback (не null!)
-                resourcesProvider      // тема
+                this,
+                getDialogId(),
+                bot,
+                null,
+                null,
+                false,
+                null,
+                dummyCallback,
+                resourcesProvider
         );
     }
 
@@ -6228,12 +6189,12 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         AlertsCreator.showBlockReportSpamAlert(
                 this,
                 getDialogId(),
-                null,                  // currentUser
-                null,                  // currentChat
-                null,                  // encryptedChat
+                null,
+                null,
+                null,
                 false,
                 null,
-                dummyCallback,         // callback
+                dummyCallback,
                 resourcesProvider
         );
     }
@@ -8395,9 +8356,11 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     starFgItem.setTranslationY(avatarContainer.getY() + AndroidUtilities.dp(24) + extra);
                 }
                 nameX = 0;
-                nameY = (float) Math.floor(avatarY)
-                        + avatarContainer.getMeasuredHeight() * avatarScale
-                        + AndroidUtilities.dp(60f);
+                float margin = AndroidUtilities.dp(8);
+                float avatarBottom = avatarContainer.getY()
+                        + avatarContainer.getMeasuredHeight()
+                        + avatarContainer.getMeasuredHeight() * (avatarScale - 1f) / 2f;
+                nameY = avatarBottom + margin;
                 onlineX = getCenteredX(onlineTextView[1]);
                 onlineY = nameY + nameTextView[1].getMeasuredHeight() + AndroidUtilities.dp(4f);
                 if (showStatusButton != null) {
@@ -8520,11 +8483,12 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
     private void refreshNameAndOnlineXY() {
         nameX = getCenteredX(nameTextView[1]);
-        nameY = (float) Math.floor(avatarY)
-                + avatarContainer.getMeasuredHeight() * avatarScale
-                + AndroidUtilities.dp(60f);
+        float margin = AndroidUtilities.dp(8);
+        float avatarBottom = avatarContainer.getY()
+                + avatarContainer.getMeasuredHeight()
+                + avatarContainer.getMeasuredHeight() * (avatarScale - 1f) / 2f;
+        nameY = avatarBottom + margin;
 
-        // Онлайн — тот же X, а по Y — сразу под именем
         onlineX = getCenteredX(onlineTextView[1]);
         onlineY = nameY + nameTextView[1].getMeasuredHeight() + AndroidUtilities.dp(4f);
     }
@@ -10051,7 +10015,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     }
                 }
                 infoStartRow = rowCount;
-                infoHeaderRow = rowCount++;
+                //infoHeaderRow = rowCount++;
                 if (!isBot && (hasPhone || !hasInfo)) {
                     phoneRow = rowCount++;
                 }
@@ -10075,9 +10039,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 //                if (phoneRow != -1 || userInfoRow != -1 || usernameRow != -1 || bizHoursRow != -1 || bizLocationRow != -1) {
 //                    notificationsDividerRow = rowCount++;
 //                }
-                if (userId != getUserConfig().getClientUserId()) {
-                    notificationsRow = rowCount++;
-                }
+//                if (userId != getUserConfig().getClientUserId()) {
+//                    notificationsRow = rowCount++;
+//                }
                 if (isBot && user != null && user.bot_has_main_app) {
                     botAppRow = rowCount++;
                 }
@@ -10165,7 +10129,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 }
             }
         } else if (isTopic) {
-            infoHeaderRow = rowCount++;
+            //infoHeaderRow = rowCount++;
             usernameRow = rowCount++;
             notificationsSimpleRow = rowCount++;
             infoSectionRow = rowCount++;
@@ -10177,11 +10141,11 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 if (LocaleController.isRTL && ChatObject.isChannel(currentChat) && chatInfo != null && !currentChat.megagroup && chatInfo.linked_chat_id != 0) {
                     emptyRow = rowCount++;
                 }
-                infoHeaderRow = rowCount++;
+                infoHeaderRow = -1;
+                if (chatInfo != null && !TextUtils.isEmpty(chatInfo.about)) {
+                    channelInfoRow = rowCount++;
+                }
                 if (chatInfo != null) {
-                    if (!TextUtils.isEmpty(chatInfo.about)) {
-                        channelInfoRow = rowCount++;
-                    }
                     if (chatInfo.location instanceof TLRPC.TL_channelLocation) {
                         locationRow = rowCount++;
                     }
@@ -10193,7 +10157,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 //            if (infoHeaderRow != -1) {
 //                notificationsDividerRow = rowCount++;
 //            }
-            notificationsRow = rowCount++;
+            notificationsDividerRow = -1;
             infoSectionRow = rowCount++;
 
             if (ChatObject.isChannel(currentChat) && !currentChat.megagroup) {
@@ -10284,8 +10248,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 if (lastSectionRow == -1 && currentChat.left && !currentChat.kicked) {
                     long requestedTime = MessagesController.getNotificationsSettings(currentAccount).getLong("dialog_join_requested_time_" + dialogId, -1);
                     if (!(requestedTime > 0 && System.currentTimeMillis() - requestedTime < 1000 * 60 * 2)) {
-                        joinRow = rowCount++;
-                        lastSectionRow = rowCount++;
+                        // joinRow = rowCount++;
+                        // lastSectionRow = rowCount++;
                     }
                 }
             } else if (chatInfo != null) {
@@ -12697,7 +12661,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         while (text.contains("\n\n\n")) {
                             text = text.replace("\n\n\n", "\n\n");
                         }
-                        aboutLinkCell.setText(text, ChatObject.isChannel(currentChat) && !currentChat.megagroup);
+                        aboutLinkCell.setTextAndValue(text, LocaleController.getString(R.string.ReportChatDescription), false);
                     } else if (position == bioRow) {
                         String value;
                         if (userInfo == null || !TextUtils.isEmpty(userInfo.about)) {
