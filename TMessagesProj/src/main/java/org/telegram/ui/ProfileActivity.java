@@ -5778,7 +5778,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         boolean muted = getMessagesController().isDialogMuted(getDialogId(), topicId);
 
         int muteIcon  = muted ? R.drawable.ic_new_unmute : R.drawable.ic_new_mute;
-        String muteTitle = ctx.getString(muted
+        String muteTitle = LocaleController.getString(muted
                 ? R.string.VoipGroupUnmute
                 : R.string.VoipGroupMute);
 
